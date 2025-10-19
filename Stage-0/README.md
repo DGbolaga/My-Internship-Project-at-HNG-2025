@@ -4,7 +4,7 @@ A Flask-based REST API that returns your personal profile information along with
 
 ## 🚀 Live Demo
 
-[Deploy on Railway](#deployment) | [Test the API](https://your-railway-app.railway.app/me)
+[Deploy on Railway](#deployment) | [Test the API](https://my-internship-project-at-hng-2025-production.up.railway.app/me)
 
 ## 📋 Features
 
