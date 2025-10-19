@@ -1,10 +1,12 @@
-# My-Internship-Project-at-HNG-2025
+# 🚀 My Internship Project at HNG-2025
+
+This repository serves as my portfolio for the 10-stage HNG internship program, documenting the development of various backend APIs, system designs, and deployment strategies. Each stage represents a fully functional, isolated project.
 
 ## 🗺️ Internship Stages Overview
 
 | Stage | Focus/Problem | Technologies | Link |
 | :---: | :--- | :--- | :--- |
-| **0** | Placeholder: Update this description | Placeholder: Update this list | [Stage 0](Stage-0) |
+| **0** | **Profile API with External Data Fetch** | Python, Flask, Requests/External API, Unit Testing, Railway (Deployment) | [Stage 0](Stage-0) |
 | **1** | Placeholder: Update this description | Placeholder: Update this list | [Stage 1](Stage-1) |
 | **2** | Placeholder: Update this description | Placeholder: Update this list | [Stage 2](Stage-2) |
 | **3** | Placeholder: Update this description | Placeholder: Update this list | [Stage 3](Stage-3) |
