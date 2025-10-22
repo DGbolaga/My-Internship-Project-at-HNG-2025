@@ -1,4 +1,3 @@
-
 # String Analyzer Service API
 
 This is a **RESTful API service** built with **FastAPI** and **SQLModel** that analyzes input strings, computes their properties, and stores them persistently in a database.
@@ -66,25 +65,50 @@ This is a **RESTful API service** built with **FastAPI** and **SQLModel** that a
 ```bash
 git clone <YOUR_GITHUB_REPO_LINK>
 cd Stage-1
+```
 
-🧰 2. Create and Activate a Virtual Environment
-python3 -m venv venv
-source venv/bin/activate   # On Windows: venv\Scripts\activate
+---
 
-📦 3. Install Dependencies
-pip install -r requirements.txt
-
-🔑 4. Environment Variables
+### 🧰 2. Create and Activate a Virtual Environment
 
 Create a .env file in the project root with:
 
+```bash
 DATABASE_URL=postgresql+psycopg2://<username>:<password>@<host>:<port>/<database>
+```
+
+---
+
+### 📦 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+---
+
+### 🔑 4. Environment Variables
+
+Create a .env file in the project root with:
+```bash
+DATABASE_URL=postgresql+psycopg2://<username>:<password>@<host>:<port>/<database>
+If omitted, the app defaults to sqlite:///database.db.
+
+```
+
+---
+
 
 
 If omitted, the app defaults to sqlite:///database.db.
 
 ▶️ 5. Run the Application
+```bash
 uvicorn main:app --reload
+```
+
 
 
 The API will be available at:
@@ -93,16 +117,22 @@ The API will be available at:
 You can test interactively via Swagger UI:
 👉 http://127.0.0.1:8000/docs
 
+---
+
 🧪 Running Tests
 
 Run the test suite with:
-
+```bash
 pytest -v
-
+```
 
 This ensures all endpoints and computations (string analysis, filters, and natural language queries) behave correctly.
 
+---
+
 📁 Project Structure
+```bash
+
 Stage-1/
 ├── main.py                      # FastAPI application entry point
 ├── test_main.py                 # Test cases using pytest
@@ -116,6 +146,9 @@ Stage-1/
 │   ├── natural_language_parser.py # Converts natural text to filters
 │   └── __init__.py
 └── venv/                        # Virtual environment (excluded from Git)
+```
+
+---
 
 🌐 API Endpoints Summary
 Method	Endpoint	Description
@@ -124,6 +157,9 @@ GET	/strings/{string_value}	Retrieve analysis of a specific string
 GET	/strings	Retrieve all strings with structured filters
 GET	/strings/filter-by-natural-language	Retrieve strings using human-readable queries
 DELETE	/strings/{string_value}	Delete a string from the database
+
+---
+
 🧩 Example Natural Language Queries
 Query	Parsed Filters
 "all single word palindromic strings"	word_count=1, is_palindrome=True
@@ -142,6 +178,8 @@ Create a new Railway project and connect your GitHub repo.
 Add DATABASE_URL as an environment variable.
 
 Deploy: Railway automatically runs the Procfile command.
+
+---
 
 👨‍💻 Author
 
