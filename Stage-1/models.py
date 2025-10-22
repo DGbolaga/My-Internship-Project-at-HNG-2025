@@ -10,4 +10,4 @@ class filterRequest(BaseModel):
     min_length: int | None = None
     max_length: int | None = None
     word_count: int | None = None
-    contains_character: int | None = None
+    contains_character: str | None = None

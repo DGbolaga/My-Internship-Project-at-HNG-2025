@@ -151,9 +151,30 @@ async def get_specific_string(string_value: str, session: SessionDep):
     )
 
 
+# {
+#   "data": [
+#     {
+#       "id": "hash1",
+#       "value": "string1",
+#       "properties": { /* ... */ },
+#       "created_at": "2025-08-27T10:00:00Z"
+#     },
+#     // ... more strings
+#   ],
+#   "count": 15,
+#   "filters_applied": {
+#     "is_palindrome": true,
+#     "min_length": 5,
+#     "max_length": 20,
+#     "word_count": 2,
+#     "contains_character": "a"
+#   }
+# }
+
+
 # get all strings with filtering (GET)
 @app.get("/strings")
-async def get_string_by_filter(filter_requests: filterRequest):
+async def get_string_by_filter(filter_requests: filterRequest = Depends(), session: Session = Depends(get_session)):
     # is_palindrome: boolean (true/false)
     # min_length: integer (minimum string length)
     # max_length: integer (maximum string length)
@@ -162,10 +183,58 @@ async def get_string_by_filter(filter_requests: filterRequest):
     """
         Fetches result based on filters. 
         returns formatted result if success (response 200 OK)
-        else raises error (400 Bad Request) if it has invalid parameter values or type.
-        
+        raises error :(400 Bad Request) if it has invalid parameter values or type.
+                      (400 Bad Request) if min_length > max_length
     """
-    pass
+    filters = {k: v for k, v in vars(filter_requests).items() if v is not None}
+    
+    # raise error if conflicting query: min length is greater than max length
+    if (filters.get("min_length") and filters.get("max_length") and (filters.get("min_length") > filters.get("max_length"))):
+        raise HTTPException(status_code=400, detail='min_length cannot be greater than max_length')
+
+    print(type(session))
+    query = select(Hero)
+    # list filters
+    if filters.get("is_palindrome") is not None:
+        query = query.where(Hero.is_palindrome == filters["is_palindrome"])
+    if filters.get("min_length") is not None:
+        query = query.where(Hero.length >= filters["min_length"])
+    if filters.get("max_length") is not None:
+        query = query.where(Hero.length <= filters["max_length"])
+    if filters.get("word_count") is not None:
+        query = query.where(Hero.word_count == filters["word_count"])
+    if filters.get("contains_character") is not None:
+        query = query.where(Hero.value.contains(filters["contains_character"]))
+   
+    filtered_strings = session.exec(query).all()
+    
+    formatted_filtered_strings = []
+    for hero in filtered_strings:
+        formatted_filtered_strings.append({
+            "id": hero.sha256_hash,
+            "value": hero.value,
+            "properties": {
+                "length": hero.length,
+                "is_palindrome": hero.is_palindrome,
+                "unique_characters": hero.unique_characters,
+                "word_count": hero.word_count,
+                "sha256_hash": hero.sha256_hash,
+                "character_frequency_map": hero.character_frequency_map,
+            },
+            # modify created_at to match specific format.
+            "created_at": hero.created_at.replace(tzinfo=timezone.utc).isoformat().replace('+00:00', 'Z')
+        })
+
+    return JSONResponse(
+        content = {
+            "data":formatted_filtered_strings,
+            "count": len(formatted_filtered_strings),
+            "filters_applied": filters,
+        },
+        status_code = status.HTTP_200_OK
+    )
+
+
 
 
 # get all strings with filtering in natural language. (GET)
