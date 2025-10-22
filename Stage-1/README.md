@@ -146,6 +146,6 @@ Deploy: Railway automatically runs the Procfile command.
 👨‍💻 Author
 
 Omogbolaga Daramola
-Backend Developer @ HNG Internship 2025
-📧 Email: [gbolagadaramola765@gmail.com](gbolagadaramola765@gmail.com)  
+Backend Dev @ HNG Internship 2025
+📧 Email: [gbolagadaramola765@gmail.com](mailto:gbolagadaramola765@gmail.com)  
 🔗 GitHub: [DGbolaga](https://github.com/DGbolaga)
