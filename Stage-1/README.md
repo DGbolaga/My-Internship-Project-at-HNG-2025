@@ -1,6 +1,11 @@
 # String Analyzer Service API
 
-This is a **RESTful API service** built with FastAPI and SQLModel that analyzes input strings, computes their properties, and stores them persistently. It fulfills all requirements for the HNG Stage 1 backend task.
+This is a **RESTful API service** built with FastAPI and SQLModel that analyzes input strings, computes their properties, and stores them persistently. 
+
+
+## 🚀 Live Demo
+
+[Deploy on Railway](#deployment) | [Test the API](https://my-internship-project-at-hng-2025-production-3aae.up.railway.app/)
 
 ## 🌟 Features Implemented
 
