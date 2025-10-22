@@ -10,15 +10,10 @@ def length(item: str):
 
 def is_palindrome(item: str):
     """
-    Return true if words is reads backwards as same as forward 
-    otherswise returns false.
+    Return true if words is reads backwards as same as forward (case sensitive)
     """
-    i, j = 0, len(item)-1
-    while i < j:
-        if item[i] != item[j]:return False 
-        i += 1
-        j -= 1
-    return True
+    normalized_item = item.lower()
+    return normalized_item == normalized_item[::-1]
 
 def unique_characters(item: str):
     '''

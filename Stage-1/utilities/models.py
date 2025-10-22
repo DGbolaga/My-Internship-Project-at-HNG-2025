@@ -11,3 +11,4 @@ class filterRequest(BaseModel):
     max_length: int | None = None
     word_count: int | None = None
     contains_character: str | None = None
+

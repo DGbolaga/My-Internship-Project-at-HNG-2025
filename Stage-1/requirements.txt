@@ -1,0 +1,6 @@
+fastapi[all]
+uvicorn
+sqlmodel
+pytest
+python-dotenv
+psycopg2-binary  # PostgreSQL driver
