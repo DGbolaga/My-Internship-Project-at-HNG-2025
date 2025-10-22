@@ -6,8 +6,8 @@ This repository serves as my portfolio for the 10-stage HNG internship program, 
 
 | Stage | Focus/Problem | Technologies | Link |
 | :---: | :--- | :--- | :--- |
-| **0** | **Profile API with External Data Fetch** | Python, Flask, Requests/External API, Unit Testing, Railway (Deployment) | [Stage 0](Stage-0) |
-| **1** | **String Analyzer Service API** — A RESTful API built with FastAPI and SQLModel that analyzes text strings, computes various properties (length, palindrome check, unique characters, word count, SHA-256 hash, and character frequency), and stores them persistently. It also supports structured and natural language filtering for querying stored results. | **FastAPI**, **SQLModel**, **SQLite/PostgreSQL**, **Pytest**, **Uvicorn**, **Python-dotenv** | [Stage 1](Stage-1) |
+| **0** | **Personal Profile API with Cat Facts**: A Flask-based REST API that serves personal profile information along with random cat facts fetched from an external API. Includes comprehensive unit tests, environment management, and deployment on Railway. | **Flask**, **Python unittest**, **Requests (Cat Facts API)**, **Python-dotenv**, **Railway (Deployment)** | [Stage 0](Stage-0) |
+| **1** | **String Analyzer Service API**: A RESTful API built with FastAPI and SQLModel that analyzes text strings, computes various properties (length, palindrome check, unique characters, word count, SHA-256 hash, and character frequency), and stores them persistently. It also supports structured and natural language filtering for querying stored results. | **FastAPI**, **SQLModel**, **SQLite/PostgreSQL**, **Pytest**, **Uvicorn**, **Python-dotenv** | [Stage 1](Stage-1) |
 | **2** | Placeholder: Update this description | Placeholder: Update this list | [Stage 2](Stage-2) |
 | **3** | Placeholder: Update this description | Placeholder: Update this list | [Stage 3](Stage-3) |
 | **4** | Placeholder: Update this description | Placeholder: Update this list | [Stage 4](Stage-4) |
