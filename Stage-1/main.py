@@ -12,7 +12,7 @@ import os
 from dotenv import load_dotenv
 
 
-# Load environment variables (needed for PostgreSQL connection in deployment)
+# Load environment variables 
 load_dotenv()
 
 
@@ -30,8 +30,8 @@ class Hero(SQLModel, table=True):
 
 
 # Configure Database Connection
-# 1. Get URL from environment variable (for PostgreSQL deployment)
-# 2. Fallback to SQLite (for easy local run)
+# - Get URL from environment variable (for deploying on PostgreSQL)
+# - Fallback to SQLite (to easily run locally)
 database_url = os.getenv(
     "DATABASE_URL", 
     "sqlite:///database.db" # Default SQLite connection
