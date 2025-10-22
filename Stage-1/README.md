@@ -177,7 +177,7 @@ Create a new Railway project and connect your GitHub repo.
 
 Add DATABASE_URL as an environment variable.
 
-Deploy: Railway automatically runs the Procfile command.
+Deploy - Railway automatically runs the Procfile command.
 
 ---
 
