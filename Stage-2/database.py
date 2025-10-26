@@ -21,8 +21,8 @@ if not DATABASE_URL:
         DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     else:
         # Fallback to SQLite. This path is for local development only.
-        DATABASE_URL = "sqlite:///./countries.db"
-
+        raise EnvironmentError("DATABASE_URL or Railway PG_* variables not set. Cannot connect to database.")
+    
 # 2. DEFINE ENGINE AND SESSION FACTORY GLOBALLY (We will create them in main.py)
 # Note: We must define a function to allow main.py to call it and get the engine.
 
