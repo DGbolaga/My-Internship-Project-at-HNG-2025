@@ -1,3 +1,5 @@
+# main.py
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 import requests
@@ -5,12 +7,15 @@ import random
 from datetime import datetime
 import os
 from PIL import Image, ImageDraw, ImageFont
-from database import engine, SessionLocal
+from database import get_db_engine, SessionLocal # New Import
 from models import Base, Country
 import crud
 
 # Get port from environment (Railway sets this)
 PORT = int(os.getenv("PORT", 8000))
+
+engine = get_db_engine()
+SessionLocal.configure(bind=engine) # Bind the session factory 
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -27,6 +32,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 
 @app.get("/")

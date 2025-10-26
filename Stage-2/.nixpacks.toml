@@ -1,2 +1,0 @@
-[phases.setup]
-aptPkgs = ["ttf-dejavu", "fontconfig", "libsqlite3-0", "libsqlite3-dev"]
