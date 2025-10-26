@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from main import app, get_db
-from database import SessionLocal, engine
+from main import engine, SessionLocal 
+
 from models import Base, Country
 import os
 
