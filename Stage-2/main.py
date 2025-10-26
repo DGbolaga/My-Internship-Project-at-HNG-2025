@@ -9,6 +9,9 @@ from database import engine, SessionLocal
 from models import Base, Country
 import crud
 
+# Get port from environment (Railway sets this)
+PORT = int(os.getenv("PORT", 8000))
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 
@@ -168,7 +171,7 @@ def delete_country(name: str):
     deleted = crud.delete_country(db, name)
     
     if not deleted:
-        raise HTTPException(status_code=404, detail={"error": "Country not found"})
+        raise HTTPException(status_code=404, detail="Country not found")
     
     return {"message": f"Country '{name}' deleted successfully"}
 
@@ -192,29 +195,45 @@ def get_summary_image():
     image_path = "cache/summary.png"
     
     if not os.path.exists(image_path):
-        raise HTTPException(status_code=404, detail={"error": "Summary image not found"})
+        raise HTTPException(status_code=404, detail="Summary image not found")
     
     return FileResponse(image_path, media_type="image/png")
 
 
 def generate_summary_image(db):
-    """Generate summary image with country stats"""
+    """Generate summary image with country stats and flags"""
+    import io
+    from urllib.request import urlopen
+    
     # Get data
     total_countries = crud.get_total_countries(db)
     top_countries = crud.get_top_countries_by_gdp(db, limit=5)
     last_refresh = datetime.utcnow()
     
     # Create image
-    width, height = 800, 600
+    width, height = 800, 650
     img = Image.new('RGB', (width, height), color='white')
     draw = ImageDraw.Draw(img)
     
     # Try to use a default font, fall back to basic if not available
     try:
-        font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
-        font_medium = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
-        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
+        # Try multiple common font paths
+        font_paths = [
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            "/System/Library/Fonts/Helvetica.ttc",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
+        ]
+        font_large = None
+        for path in font_paths:
+            if os.path.exists(path):
+                font_large = ImageFont.truetype(path, 32)
+                font_medium = ImageFont.truetype(path, 24)
+                font_small = ImageFont.truetype(path, 18)
+                break
+        if font_large is None:
+            raise Exception("No fonts found")
     except:
+        # Use default font as fallback
         font_large = ImageFont.load_default()
         font_medium = ImageFont.load_default()
         font_small = ImageFont.load_default()
@@ -229,10 +248,36 @@ def generate_summary_image(db):
     
     y_offset = 250
     for i, country in enumerate(top_countries, 1):
+        # Try to fetch and display flag
+        flag_x = 50
+        flag_size = 40
+        
+        if country.flag_url:
+            try:
+                # Download flag image
+                with urlopen(country.flag_url, timeout=5) as response:
+                    flag_data = response.read()
+                    flag_img = Image.open(io.BytesIO(flag_data))
+                    
+                    # Resize flag to fit
+                    flag_img = flag_img.resize((flag_size, flag_size), Image.Resampling.LANCZOS)
+                    
+                    # Paste flag on image
+                    img.paste(flag_img, (flag_x, y_offset))
+            except:
+                # If flag download fails, draw a placeholder box
+                draw.rectangle([flag_x, y_offset, flag_x + flag_size, y_offset + flag_size], 
+                             outline='gray', width=2)
+        else:
+            # Draw placeholder if no flag URL
+            draw.rectangle([flag_x, y_offset, flag_x + flag_size, y_offset + flag_size], 
+                         outline='gray', width=2)
+        
+        # Draw country info next to flag
         gdp_formatted = f"{country.estimated_gdp:,.2f}" if country.estimated_gdp else "N/A"
         text = f"{i}. {country.name} - ${gdp_formatted}"
-        draw.text((50, y_offset), text, fill='black', font=font_small)
-        y_offset += 40
+        draw.text((flag_x + flag_size + 15, y_offset + 10), text, fill='black', font=font_small)
+        y_offset += 60
     
     # Save image
     img.save("cache/summary.png")
