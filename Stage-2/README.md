@@ -18,7 +18,7 @@ A RESTful API that fetches country data from external APIs, stores it in a datab
 - **SQLAlchemy** - Database ORM
 - **SQLite** - Database (easy to deploy, no setup required)
 - **Pillow** - Image generation
-- **Pytest** - Testing
+- **Pytest** - Testing.
 
 ## Project Structure
 
