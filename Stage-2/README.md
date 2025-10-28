@@ -24,7 +24,7 @@ A RESTful API that fetches country data from external APIs, stores it in a datab
 | ORM              | **SQLAlchemy**                  |
 | Database         | **PostgreSQL / SQLite (local)** |
 | Environment      | **python-dotenv**               |
-| Image Generation | **Pillow**, **CairoSVG**        |
+| Image Generation | **Pillow**        |
 | HTTP Client      | **Requests**                    |
 | Testing          | **Pytest**                      |
 
