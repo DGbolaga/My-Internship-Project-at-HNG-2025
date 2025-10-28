@@ -1,7 +1,6 @@
 [build]
+# Ensure both the build headers AND the runtime library are installed
 packages = [
-    "libcairo2",     # <--- Add the essential runtime library
     "libcairo2-dev", 
-    "libpq-dev",
-    "locales"
+    "libcairo2"
 ]
