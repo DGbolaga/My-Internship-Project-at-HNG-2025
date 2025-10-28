@@ -5,11 +5,15 @@ from sqlalchemy.orm import Session
 from crud import add_countries, get_a_country, get_all_countries_by_filters, delete_a_country, get_status, generate_summary
 from models import Country
 from schemas import FilterRequest
-from db import get_db
+from db import get_db, create_table
 from datetime import datetime, timezone
 import requests, os, random
 
 app = FastAPI()
+@app.on_event("startup")
+def on_startup():
+    # Ensure tables exist on boot (useful for fresh Railway deployments)
+    create_table()
 
 
 @app.exception_handler(RequestValidationError)
