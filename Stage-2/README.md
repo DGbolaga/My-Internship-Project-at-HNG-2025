@@ -34,6 +34,7 @@ A RESTful API that fetches country data from external APIs, stores it in a datab
 
 ```
 Stage-2-demo/
+├── .env.example         # example of environment variables
 ├── main.py              # FastAPI app & API routes
 ├── crud.py              # Database operations
 ├── db.py                # Database configuration
@@ -77,7 +78,7 @@ Create a `.env` file in the root directory:
 
 ```bash
 DATABASE_URL=sqlite:///./countries.db
-COUNTRIES_API=https://restcountries.com/v2/all
+COUNTRIES_API=https://restcountries.com/v2/all?fields=name,capital,region,population,flag,currencies
 EXCHANGE_RATES_API=https://open.er-api.com/v6/latest/USD
 ```
 
