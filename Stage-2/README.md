@@ -260,8 +260,6 @@ When `/countries/refresh` runs successfully, a file `cache/summary.png` is creat
 4. Add environment variables
 
    * `DATABASE_URL`
-   * `COUNTRIES_API`
-   * `EXCHANGE_RATES_API`
 5. Railway will auto-build and deploy your FastAPI app
 6. Access via your generated public URL, e.g.:
 
