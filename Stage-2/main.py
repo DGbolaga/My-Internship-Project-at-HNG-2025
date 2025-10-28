@@ -42,12 +42,12 @@ async def refresh(db: Session = Depends(get_db)):
     and generates a summary image.
     """
 
-    countries_api = os.getenv("COUNTRIES_API")
-    exchange_api = os.getenv("EXCHANGE_RATES_API")
+    countries_api = "https://restcountries.com/v2/all?fields=name,capital,region,population,flag,currencies"
+    exchange_api = "https://open.er-api.com/v6/latest/USD"
 
     try:
         # Fetch countries data
-        countries_response = requests.get(countries_api, timeout=10)
+        countries_response = requests.get(countries_api, timeout=15)
         if countries_response.status_code != 200:
             return JSONResponse(
                 status_code=503,
@@ -58,7 +58,7 @@ async def refresh(db: Session = Depends(get_db)):
             )
 
         # Fetch exchange rates
-        exchange_response = requests.get(exchange_api, timeout=10)
+        exchange_response = requests.get(exchange_api, timeout=15)
         if exchange_response.status_code != 200:
             return JSONResponse(
                 status_code=503,
