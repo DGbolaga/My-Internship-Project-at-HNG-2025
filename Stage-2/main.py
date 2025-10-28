@@ -5,11 +5,25 @@ from sqlalchemy.orm import Session
 from crud import add_countries, get_a_country, get_all_countries_by_filters, delete_a_country, get_status, generate_summary
 from models import Country
 from schemas import FilterRequest
-from db import get_db
+from db import get_db, create_table
 from datetime import datetime, timezone
 import requests, os, random
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Handles startup and shutdown events.
+    On startup, it ensures the database tables are created.
+    """
+    print("Application startup: Creating database tables...")
+    create_table() 
+    print("Database tables created. Application is ready.")
+    yield
+    print("Application shutdown.")
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.exception_handler(RequestValidationError)
