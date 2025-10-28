@@ -1,38 +1,23 @@
-# main.py
+from fastapi import FastAPI, Depends, status, Request, Query
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
+from sqlalchemy.orm import Session
+from crud import add_countries, get_a_country, get_all_countries_by_filters, delete_a_country, get_status, generate_summary
+from models import Country
+from schemas import FilterRequest
+from db import get_db
+from datetime import datetime, timezone
+import requests, os, random
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
-import requests
-import random
-from datetime import datetime
-import os
-from PIL import Image, ImageDraw, ImageFont
-from database import get_db_engine, SessionLocal # New Import
-from models import Base, Country
-import crud
+app = FastAPI()
 
-# Get port from environment (Railway sets this)
-PORT = int(os.getenv("PORT", 8000))
 
-engine = get_db_engine()
-SessionLocal.configure(bind=engine) # Bind the session factory 
-
-# Create tables
-Base.metadata.create_all(bind=engine)
-
-# Create cache directory
-os.makedirs("cache", exist_ok=True)
-
-app = FastAPI(title="Country Currency & Exchange API")
-
-# Dependency to get DB session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content={"error": "Validation failed", "details": exc.errors()},
+    )
 
 
 @app.get("/")
@@ -41,42 +26,53 @@ def root():
 
 
 @app.post("/countries/refresh")
-def refresh_countries():
-    """Fetch countries and exchange rates, then cache in database"""
-    db = next(get_db())
-    
+async def refresh(db: Session = Depends(get_db)):
+    """
+    Fetches latest countries and exchange rates, updates the database,
+    and generates a summary image.
+    """
+
+    countries_api = os.getenv("COUNTRIES_API")
+    exchange_api = os.getenv("EXCHANGE_RATES_API")
+
     try:
         # Fetch countries data
-        countries_response = requests.get(
-            "https://restcountries.com/v2/all?fields=name,capital,region,population,flag,currencies",
-            timeout=10
-        )
+        countries_response = requests.get(countries_api, timeout=10)
         if countries_response.status_code != 200:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=503,
-                detail={"error": "External data source unavailable", "details": "Could not fetch data from restcountries.com"}
+                content={
+                    "error": "External data source unavailable",
+                    "details": f"Could not fetch data from {countries_api}",
+                },
             )
-        countries_data = countries_response.json()
-        
+
         # Fetch exchange rates
-        exchange_response = requests.get(
-            "https://open.er-api.com/v6/latest/USD",
-            timeout=10
-        )
+        exchange_response = requests.get(exchange_api, timeout=10)
         if exchange_response.status_code != 200:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=503,
-                detail={"error": "External data source unavailable", "details": "Could not fetch data from open.er-api.com"}
+                content={
+                    "error": "External data source unavailable",
+                    "details": f"Could not fetch data from {exchange_api}",
+                },
             )
-        exchange_data = exchange_response.json()
-        exchange_rates = exchange_data.get("rates", {})
-        
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
+
+    except requests.exceptions.RequestException:
+        # Handles timeout, connection error, etc.
+        return JSONResponse(
             status_code=503,
-            detail={"error": "External data source unavailable", "details": str(e)}
+            content={
+                "error": "External data source unavailable",
+                "details": f"Could not fetch data from {countries_api if 'countries' in locals() else exchange_api}",
+            },
         )
-    
+
+    # Parse valid data only if both APIs succeeded
+    countries_data = countries_response.json()
+    exchange_data = exchange_response.json()
+    exchange_rates = exchange_data.get("rates", {})
+
     # Process each country
     for country in countries_data:
         name = country.get("name")
@@ -85,21 +81,20 @@ def refresh_countries():
         population = country.get("population")
         flag_url = country.get("flag")
         currencies = country.get("currencies", [])
-        
-        # Handle currency
+
+        # Handle currency and GDP estimation
         currency_code = None
         exchange_rate = None
         estimated_gdp = 0
-        
+
         if currencies and len(currencies) > 0:
             currency_code = currencies[0].get("code")
             if currency_code and currency_code in exchange_rates:
                 exchange_rate = exchange_rates[currency_code]
-                # Calculate estimated GDP
                 random_multiplier = random.uniform(1000, 2000)
                 estimated_gdp = (population * random_multiplier) / exchange_rate
-        
-        # Create or update country
+
+        # Prepare country data
         country_data = {
             "name": name,
             "capital": capital,
@@ -109,27 +104,51 @@ def refresh_countries():
             "exchange_rate": exchange_rate,
             "estimated_gdp": estimated_gdp,
             "flag_url": flag_url,
-            "last_refreshed_at": datetime.utcnow()
+            "last_refreshed_at": datetime.now(timezone.utc),
         }
-        
-        crud.create_or_update_country(db, country_data)
-    
+
+        # Add or update country
+        add_countries(db=db, country_data=country_data, commit=False)
+
+    # Commit all changes at once
+    db.commit()
+
     # Generate summary image
-    generate_summary_image(db)
-    
+    generate_summary(db)
+
     return {"message": "Countries refreshed successfully"}
 
 
-@app.get("/countries")
-def get_countries(
-    region: str = Query(None),
-    currency: str = Query(None),
-    sort: str = Query(None)
-):
-    """Get all countries with optional filters and sorting"""
-    db = next(get_db())
-    countries = crud.get_countries(db, region=region, currency_code=currency, sort=sort)
+
+@app.get("/status")
+async def show_status(db: Session=Depends(get_db)):
+    """
+    returns json containing number of countries and last refreshed time.
+    """
+    return get_status(db)
+
+@app.get("/countries/image")
+async def show_summary():
+    """
+    redirects to endpoint: GET /countries/image
+    shows generated image at redirected endpoint
+    return json error if image doesn't exist.
+    """
+    image_path = "cache/summary.png"
     
+    if not os.path.exists(image_path):
+        return JSONResponse(status_code=404, content={"error": "Summary image not found"})
+    
+    return FileResponse(image_path, media_type="image/png")
+    
+
+@app.get("/countries")
+async def countries_by_filter(region: str = Query(None), currency: str = Query(None), sort: str = Query(None), db: Session=Depends(get_db)):
+    """
+    returns countries based on filters.
+    """
+    filters = FilterRequest(region=region, currency_code=currency, sort=sort)
+    countries = get_all_countries_by_filters(db=db, filters=filters)
     return [
         {
             "id": c.id,
@@ -148,142 +167,31 @@ def get_countries(
 
 
 @app.get("/countries/{name}")
-def get_country(name: str):
-    """Get a single country by name"""
-    db = next(get_db())
-    country = crud.get_country_by_name(db, name)
-    
-    if not country:
-        raise HTTPException(status_code=404, detail="Country not found")
-    
-    return {
-        "id": country.id,
-        "name": country.name,
-        "capital": country.capital,
-        "region": country.region,
-        "population": country.population,
-        "currency_code": country.currency_code,
-        "exchange_rate": country.exchange_rate,
-        "estimated_gdp": country.estimated_gdp,
-        "flag_url": country.flag_url,
-        "last_refreshed_at": country.last_refreshed_at.isoformat() if country.last_refreshed_at else None
-    }
+async def get_country(name: str, db: Session=Depends(get_db)):
+    """
+    get a country by name from database
+    """
 
+    query = get_a_country(db=db, name=name)
+    if not query:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Country not found"}
+        )
+    return query
 
 @app.delete("/countries/{name}")
-def delete_country(name: str):
-    """Delete a country by name"""
-    db = next(get_db())
-    deleted = crud.delete_country(db, name)
-    
+async def delete_country(name: str, db: Session=Depends(get_db)):
+    """
+    delete a country from database.
+    """
+    deleted = delete_a_country(db=db, name=name)
     if not deleted:
-        raise HTTPException(status_code=404, detail="Country not found")
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Country not found"}
+        )
     
     return {"message": f"Country '{name}' deleted successfully"}
 
-
-@app.get("/status")
-def get_status():
-    """Get total countries and last refresh timestamp"""
-    db = next(get_db())
-    total = crud.get_total_countries(db)
-    last_refresh = crud.get_last_refresh_time(db)
     
-    return {
-        "total_countries": total,
-        "last_refreshed_at": last_refresh.isoformat() if last_refresh else None
-    }
-
-
-@app.get("/countries/image")
-def get_summary_image():
-    """Serve the generated summary image"""
-    image_path = "cache/summary.png"
-    
-    if not os.path.exists(image_path):
-        raise HTTPException(status_code=404, detail="Summary image not found")
-    
-    return FileResponse(image_path, media_type="image/png")
-
-
-def generate_summary_image(db):
-    """Generate summary image with country stats and flags"""
-    import io
-    from urllib.request import urlopen
-    
-    # Get data
-    total_countries = crud.get_total_countries(db)
-    top_countries = crud.get_top_countries_by_gdp(db, limit=5)
-    last_refresh = datetime.utcnow()
-    
-    # Create image
-    width, height = 800, 650
-    img = Image.new('RGB', (width, height), color='white')
-    draw = ImageDraw.Draw(img)
-    
-    # Try to use a default font, fall back to basic if not available
-    try:
-        # Try multiple common font paths
-        font_paths = [
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-            "/System/Library/Fonts/Helvetica.ttc",
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf"
-        ]
-        font_large = None
-        for path in font_paths:
-            if os.path.exists(path):
-                font_large = ImageFont.truetype(path, 32)
-                font_medium = ImageFont.truetype(path, 24)
-                font_small = ImageFont.truetype(path, 18)
-                break
-        if font_large is None:
-            raise Exception("No fonts found")
-    except:
-        # Use default font as fallback
-        font_large = ImageFont.load_default()
-        font_medium = ImageFont.load_default()
-        font_small = ImageFont.load_default()
-    
-    # Draw header
-    draw.text((50, 50), "Country Summary Report", fill='black', font=font_large)
-    draw.text((50, 100), f"Total Countries: {total_countries}", fill='black', font=font_medium)
-    draw.text((50, 140), f"Generated: {last_refresh.strftime('%Y-%m-%d %H:%M:%S UTC')}", fill='gray', font=font_small)
-    
-    # Draw top countries
-    draw.text((50, 200), "Top 5 Countries by Estimated GDP:", fill='black', font=font_medium)
-    
-    y_offset = 250
-    for i, country in enumerate(top_countries, 1):
-        # Try to fetch and display flag
-        flag_x = 50
-        flag_size = 40
-        
-        if country.flag_url:
-            try:
-                # Download flag image
-                with urlopen(country.flag_url, timeout=5) as response:
-                    flag_data = response.read()
-                    flag_img = Image.open(io.BytesIO(flag_data))
-                    
-                    # Resize flag to fit
-                    flag_img = flag_img.resize((flag_size, flag_size), Image.Resampling.LANCZOS)
-                    
-                    # Paste flag on image
-                    img.paste(flag_img, (flag_x, y_offset))
-            except:
-                # If flag download fails, draw a placeholder box
-                draw.rectangle([flag_x, y_offset, flag_x + flag_size, y_offset + flag_size], 
-                             outline='gray', width=2)
-        else:
-            # Draw placeholder if no flag URL
-            draw.rectangle([flag_x, y_offset, flag_x + flag_size, y_offset + flag_size], 
-                         outline='gray', width=2)
-        
-        # Draw country info next to flag
-        gdp_formatted = f"{country.estimated_gdp:,.2f}" if country.estimated_gdp else "N/A"
-        text = f"{i}. {country.name} - ${gdp_formatted}"
-        draw.text((flag_x + flag_size + 15, y_offset + 10), text, fill='black', font=font_small)
-        y_offset += 60
-    
-    # Save image
-    img.save("cache/summary.png")

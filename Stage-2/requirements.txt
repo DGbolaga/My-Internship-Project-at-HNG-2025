@@ -1,9 +1,9 @@
-fastapi==0.104.1
-uvicorn==0.24.0
-sqlalchemy==2.0.23
-requests==2.31.0
-pillow==10.1.0
-pytest==7.4.3
-httpx==0.25.2
-python-dotenv==1.0.0
-psycopg2-binary  # PostgreSQL driver
+fastapi==0.120.0
+uvicorn==0.38.0
+SQLAlchemy==2.0.44
+psycopg2-binary==2.9.11
+pydantic==2.12.3
+python-dotenv==1.2.1
+pillow==12.0.0
+requests==2.32.5
+CairoSVG==2.8.2

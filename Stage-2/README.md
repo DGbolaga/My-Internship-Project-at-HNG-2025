@@ -2,168 +2,207 @@
 
 A RESTful API that fetches country data from external APIs, stores it in a database, and provides CRUD operations with exchange rate calculations.
 
-## Features
+---
 
-- Fetch country data from restcountries.com
-- Get exchange rates from open.er-api.com
-- Calculate estimated GDP for each country
-- Filter countries by region and currency
-- Sort countries by GDP, population, or name
-- Generate summary images with top countries
-- Full CRUD operations
+## 🚀 Features
 
-## Tech Stack
+* Fetch country data from **restcountries.com**
+* Fetch currency exchange rates from **open.er-api.com**
+* Compute **estimated GDP** for each country
+* Filter and sort countries by region, currency, GDP, population, or name
+* Generate and serve **summary images** of top-performing countries
+* Perform full **CRUD** operations on country data
+* Unit-tested endpoints with **pytest**
 
-- **FastAPI** - Modern Python web framework
-- **SQLAlchemy** - Database ORM
-- **SQLite** - Database (easy to deploy, no setup required)
-- **Pillow** - Image generation
-- **Pytest** - Testing.
+---
 
-## Project Structure
+## 🧠 Tech Stack
+
+| Component        | Technology                      |
+| ---------------- | ------------------------------- |
+| Framework        | **FastAPI**                     |
+| ORM              | **SQLAlchemy**                  |
+| Database         | **PostgreSQL / SQLite (local)** |
+| Environment      | **python-dotenv**               |
+| Image Generation | **Pillow**, **CairoSVG**        |
+| HTTP Client      | **Requests**                    |
+| Testing          | **Pytest**                      |
+
+---
+
+## 📁 Project Structure
 
 ```
-country-currency-api/
-├── main.py              # FastAPI app & endpoints
-├── models.py            # Database models
-├── database.py          # Database configuration
+Stage-2-demo/
+├── main.py              # FastAPI app & API routes
 ├── crud.py              # Database operations
-├── test_api.py          # Test suite
+├── db.py                # Database configuration
+├── models.py            # SQLAlchemy models
+├── schemas.py           # Pydantic schemas
+├── test_main.py         # Test cases for all endpoints
 ├── requirements.txt     # Python dependencies
-├── .env.example         # Environment variables template
-├── README.md           # This file
-└── cache/              # Generated images (auto-created)
+├── README.md            # Project documentation
+├── cache/               # Stores generated summary images
+├── venv/                # Virtual environment
+└── __pycache__/         # Auto-generated cache files
 ```
 
-## Setup Instructions
+---
 
-### Local Development
+## ⚙️ Setup Instructions
 
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd country-currency-api
-   ```
+### 1️⃣ Clone the Repository
 
-2. **Create a virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Create environment file (optional)**
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` if you want to customize settings (default SQLite works fine)
-
-5. **Run the application**
-   ```bash
-   uvicorn main:app --reload
-   ```
-
-6. **Access the API**
-   - API: http://localhost:8000
-   - Interactive docs: http://localhost:8000/docs
-   - Alternative docs: http://localhost:8000/redoc
-
-## API Endpoints
-
-### Refresh Countries
 ```bash
+git clone <your-repo-url>
+cd Stage-2-demo
+```
+
+### 2️⃣ Create and Activate a Virtual Environment
+
+```bash
+python -m venv venv
+source venv/bin/activate     # (Windows: venv\Scripts\activate)
+```
+
+### 3️⃣ Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4️⃣ Configure Environment Variables
+
+Create a `.env` file in the root directory:
+
+```bash
+DATABASE_URL=sqlite:///./countries.db
+COUNTRIES_API=https://restcountries.com/v2/all
+EXCHANGE_RATES_API=https://open.er-api.com/v6/latest/USD
+```
+
+*(PostgreSQL users can replace the `DATABASE_URL` accordingly.)*
+
+### 5️⃣ Run the Application
+
+```bash
+uvicorn main:app --reload
+```
+
+### 6️⃣ Access the API
+
+* Root: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+* Docs (Swagger): [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+* Redoc: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+
+---
+
+## 🌐 API Endpoints
+
+### 🌀 Root
+
+```
+GET /
+```
+
+Returns a welcome message and link to docs.
+
+---
+
+### 🔁 Refresh Countries
+
+```
 POST /countries/refresh
 ```
-Fetches all countries and exchange rates, then caches them in the database.
 
-### Get All Countries
-```bash
-GET /countries
-GET /countries?region=Africa
-GET /countries?currency=NGN
-GET /countries?sort=gdp_desc
+Fetches countries and exchange rates, calculates estimated GDPs, updates database, and regenerates the summary image.
+
+---
+
+### 📊 Get Status
+
 ```
-Returns all countries with optional filters and sorting.
-
-**Sort options:** `gdp_desc`, `gdp_asc`, `name_asc`, `name_desc`, `population_desc`, `population_asc`
-
-### Get Single Country
-```bash
-GET /countries/{name}
-```
-Returns a specific country by name.
-
-### Delete Country
-```bash
-DELETE /countries/{name}
-```
-Deletes a country record.
-
-### Get Status
-```bash
 GET /status
 ```
-Returns total countries and last refresh timestamp.
 
-### Get Summary Image
-```bash
+Returns the total number of countries and the last refresh timestamp.
+
+---
+
+### 🌎 Get All Countries
+
+```
+GET /countries
+GET /countries?region=Africa
+GET /countries?currency=USD
+GET /countries?sort=gdp_desc
+```
+
+Retrieves countries with optional filters and sorting.
+
+**Supported Sorts:**
+`gdp_desc`, `gdp_asc`, `name_asc`, `name_desc`, `population_desc`, `population_asc`
+
+---
+
+### 🔍 Get Single Country
+
+```
+GET /countries/{name}
+```
+
+Fetch a country’s details by name.
+
+---
+
+### ❌ Delete Country
+
+```
+DELETE /countries/{name}
+```
+
+Deletes a country by name from the database.
+
+---
+
+### 🖼️ Get Summary Image
+
+```
 GET /countries/image
 ```
-Returns a generated PNG image with summary statistics.
 
-## Testing
+Returns a generated summary image showing top 5 countries by GDP.
 
-Run all tests:
+---
+
+## 🧪 Testing
+
+Run tests with:
+
 ```bash
-pytest test_api.py -v
+pytest -v
 ```
 
-Run tests manually:
+Example:
+
 ```bash
-python test_api.py
+pytest test_main.py -v
 ```
 
-## Deployment on Railway
+---
 
-1. **Create a new project on Railway**
-   - Go to https://railway.app
-   - Click "New Project"
-   - Select "Deploy from GitHub repo"
+## 🧩 Example Responses
 
-2. **Connect your repository**
-   - Authorize Railway to access your GitHub
-   - Select your repository
+### ✅ `GET /status`
 
-3. **Configure the deployment**
-   - Railway will auto-detect Python
-   - No additional configuration needed (SQLite database is file-based)
-
-4. **Environment Variables (optional)**
-   - `PORT` - Railway sets this automatically
-   - `DATABASE_URL` - Defaults to SQLite, no need to change
-
-5. **Deploy**
-   - Railway will automatically build and deploy
-   - You'll get a public URL like `https://your-app.railway.app`
-
-## Environment Variables
-
-Create a `.env` file for local development:
-
-```env
-DATABASE_URL=sqlite:///./countries.db
-PORT=8000
+```json
+{
+  "total_countries": 250,
+  "last_refreshed_at": "2025-10-27T10:15:00Z"
+}
 ```
 
-**Note:** For Railway deployment, these are optional. The app uses sensible defaults.
-
-## Sample Response
-
-### GET /countries?region=Africa
+### ✅ `GET /countries?region=Africa`
 
 ```json
 [
@@ -174,78 +213,65 @@ PORT=8000
     "region": "Africa",
     "population": 206139589,
     "currency_code": "NGN",
-    "exchange_rate": 1600.23,
-    "estimated_gdp": 25767448125.2,
+    "exchange_rate": 1500.23,
+    "estimated_gdp": 27485250000.0,
     "flag_url": "https://flagcdn.com/ng.svg",
-    "last_refreshed_at": "2025-10-22T18:00:00Z"
+    "last_refreshed_at": "2025-10-27T10:15:00Z"
   }
 ]
 ```
 
-### GET /status
+---
 
-```json
-{
-  "total_countries": 250,
-  "last_refreshed_at": "2025-10-22T18:00:00Z"
-}
-```
+## ⚠️ Error Handling
 
-## Error Handling
+| Status | Description                        |
+| ------ | ---------------------------------- |
+| `400`  | Validation failed                  |
+| `404`  | Country not found or image missing |
+| `503`  | External API unavailable           |
 
-The API returns consistent JSON error responses:
+**Example:**
 
-- `400` - Validation failed
-- `404` - Country not found
-- `500` - Internal server error
-- `503` - External API unavailable
-
-Example error response:
 ```json
 {
   "error": "Country not found"
 }
 ```
 
-## How It Works
+---
 
-1. **Data Fetching** - The `/countries/refresh` endpoint fetches data from two external APIs
-2. **Currency Matching** - Each country's currency is matched with its exchange rate
-3. **GDP Calculation** - Estimated GDP = population × random(1000-2000) ÷ exchange_rate
-4. **Database Storage** - Data is stored/updated in SQLite with case-insensitive name matching
-5. **Image Generation** - A summary image is created showing top 5 countries by GDP
+## 📸 Summary Image Example
 
-## Dependencies
+When `/countries/refresh` runs successfully, a file `cache/summary.png` is created showing:
 
-- `fastapi` - Web framework
-- `uvicorn` - ASGI server
-- `sqlalchemy` - Database ORM
-- `requests` - HTTP client for external APIs
-- `pillow` - Image processing
-- `pytest` - Testing framework
-- `httpx` - Test client
-- `python-dotenv` - Environment variables
+* Total countries count
+* Last refresh timestamp
+* Top 5 countries by GDP with their flags
 
-## Notes
+---
 
-- The database file `countries.db` is created automatically on first run
-- Images are saved in the `cache/` directory (created automatically)
-- Exchange rates are fetched in USD base currency
-- Countries with no currency data are still stored (with null values)
-- The random GDP multiplier is recalculated on each refresh
+## ☁️ Deployment (Railway Example)
 
-## Troubleshooting
+1. Push your project to GitHub
+2. Go to [Railway.app](https://railway.app) → “New Project” → “Deploy from GitHub”
+3. Connect your repo
+4. Add environment variables
 
-**Database locked error:**
-- This can happen with SQLite if multiple processes access it. Just retry the request.
+   * `DATABASE_URL`
+   * `COUNTRIES_API`
+   * `EXCHANGE_RATES_API`
+5. Railway will auto-build and deploy your FastAPI app
+6. Access via your generated public URL, e.g.:
 
-**External API timeout:**
-- The APIs have a 10-second timeout. If they fail, you'll get a 503 error.
+   ```
+   https://country-currency-api.up.railway.app
+   ```
 
-**Image generation fails:**
-- The app tries to use system fonts but falls back to default if unavailable.
+---
 
-## License
+## 🧾 License
 
-MIT License - feel free to use this project however you like!
+MIT License © 2025 — Developed by **Omogbolaga Daramola**
+For HNG Internship (Stage-2)
 
