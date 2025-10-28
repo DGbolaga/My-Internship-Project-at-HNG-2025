@@ -25,7 +25,7 @@ def root():
     return {"message": "Country Currency & Exchange API", "docs": "/docs"}
 
 
-@app.get("/health")
+@app.get("/health") 
 def health_check():
     """Endpoint for Railway health checks."""
     return {"status": "ok"}
