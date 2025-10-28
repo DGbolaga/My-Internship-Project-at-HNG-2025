@@ -34,7 +34,6 @@ A RESTful API that fetches country data from external APIs, stores it in a datab
 
 ```
 Stage-2-demo/
-├── .env.example         # example of environment variables
 ├── main.py              # FastAPI app & API routes
 ├── crud.py              # Database operations
 ├── db.py                # Database configuration
