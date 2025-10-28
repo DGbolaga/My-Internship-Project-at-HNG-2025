@@ -1,7 +1,7 @@
 [build]
-# Specify the system packages required for cairo/cairosvg
 packages = [
+    "libcairo2",     # <--- Add the essential runtime library
     "libcairo2-dev", 
     "libpq-dev",
-    "locales" # <--- Temporary package to force cache clear
+    "locales"
 ]
