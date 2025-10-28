@@ -2,6 +2,9 @@ from models import Country
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from schemas import FilterRequest
+import os, io
+from urllib.request import urlopen
+from PIL import Image, ImageDraw, ImageFont
 
 def add_countries(db: Session, country_data: dict, commit: bool = True):
     """
@@ -81,10 +84,6 @@ def get_status(db: Session):
 
 def generate_summary(db: Session):
     """Generates and saves a summary image using get_status and top countries."""
-    import os, io
-    from urllib.request import urlopen
-    from PIL import Image, ImageDraw, ImageFont
-    import cairosvg
 
     status = get_status(db)
     total_countries = status["total_countries"]
@@ -125,9 +124,9 @@ def generate_summary(db: Session):
                 with urlopen(country.flag_url, timeout=5) as response:
                     flag_data = response.read()
 
-                    # Convert SVGs to PNGs for Pillow
-                    if country.flag_url.endswith(".svg"):
-                        flag_data = cairosvg.svg2png(bytestring=flag_data)
+                    # NOTE: Removed cairosvg conversion. 
+                    # Pillow now attempts to open the image directly.
+                    # This will fail for pure SVG files but prevent the OSError.
 
                     flag_img = Image.open(io.BytesIO(flag_data)).convert("RGB")
                     flag_img = flag_img.resize((flag_size, flag_size))
@@ -136,7 +135,7 @@ def generate_summary(db: Session):
                 raise Exception("No flag found")
 
         except Exception as e:
-            # Draw empty placeholder box if something fails
+            # Draw empty placeholder box if flag fails (e.g., connection, format error, or SVG)
             draw.rectangle(
                 [flag_x, y_offset, flag_x + flag_size, y_offset + flag_size],
                 outline="gray",
