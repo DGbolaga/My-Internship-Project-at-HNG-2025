@@ -9,7 +9,6 @@ from db import get_db
 from datetime import datetime, timezone
 import requests, os, random
 
-
 app = FastAPI()
 
 
@@ -24,6 +23,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.get("/")
 def root():
     return {"message": "Country Currency & Exchange API", "docs": "/docs"}
+
+
+@app.get("/health")
+def health_check():
+    """Endpoint for Railway health checks."""
+    return {"status": "ok"}
 
 
 @app.post("/countries/refresh")
@@ -120,7 +125,6 @@ async def refresh(db: Session = Depends(get_db)):
     return {"message": "Countries refreshed successfully"}
 
 
-
 @app.get("/status")
 async def show_status(db: Session=Depends(get_db)):
     """
@@ -194,5 +198,3 @@ async def delete_country(name: str, db: Session=Depends(get_db)):
         )
     
     return {"message": f"Country '{name}' deleted successfully"}
-
-    
